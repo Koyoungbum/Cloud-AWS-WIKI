@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>위키사이트</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>위키사이트</h1>
+        <nav>
+            <ul>
+                <li><a href="#createCategory">카테고리 생성</a></li>
+                <li><a href="#categoryList">카테고리 목록</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="createCategory">
+            <h2>카테고리 생성</h2>
+            <form id="categoryForm">
+                <input type="text" id="categoryName" placeholder="카테고리 이름" required />
+                <textarea id="content" placeholder="내용" required></textarea>
+                <button type="submit">카테고리 생성</button>
+            </form>
+        </section>
+
+        <section id="categoryList">
+            <h2>카테고리 목록</h2>
+            <ul id="categories">
+                <!-- 카테고리 목록이 여기에 동적으로 추가됩니다. -->
+            </ul>
+        </section>
+    </main>
+
+    <script>
+        // 페이지 로드 시 카테고리 목록 가져오기
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('https://0zza1qhjz3.execute-api.ap-northeast-2.amazonaws.com/default/wiki-lam-3', {
+                    method: 'GET'
+                });
+                const data = await response.json();
+                
+                // 받아온 카테고리들을 목록에 추가
+                data.Items.forEach(item => {
+                    addCategoryToList(item.categoryName, item.content);
+                });
+            } catch (error) {
+                console.error('카테고리 목록 가져오기 실패:', error);
+            }
+        });
+
+        // 카테고리 생성 요청
+        document.getElementById('categoryForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const categoryName = document.getElementById('categoryName').value;
+            const content = document.getElementById('content').value;
+
+            try {
+                const response = await fetch('https://0zza1qhjz3.execute-api.ap-northeast-2.amazonaws.com/default/wiki-lam-3', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ categoryName, content }),
+                });
+
+                const data = await response.json();
+                console.log(data);
+                addCategoryToList(categoryName, content);
+                
+                // 폼 초기화
+                event.target.reset();
+            } catch (error) {
+                console.error('카테고리 생성 실패:', error);
+                alert('카테고리 생성에 실패했습니다.');
+            }
+        });
+
+        // 카테고리 목록에 추가하는 함수
+        function addCategoryToList(name, content) {
+            const categoriesList = document.getElementById('categories');
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <strong>${name}</strong>: ${content}
+                <button onclick="location.href='edit.html?category=${encodeURIComponent(name)}'">수정</button>
+            `;
+            categoriesList.appendChild(listItem);
+        }
+    </script>
+</body>
+</html>
